@@ -313,7 +313,11 @@ const getGarbagePointInfo = (row) => {
 
 // DataTable Component
 const DataTable = ({ data, onRowClick, selectedRowIndex }) => {
-  const tableData = data.filter((row) => row["Type_of_Form"] === "form_for_gvp");
+  const tableData = [...data.filter((row) => row["Type_of_Form"] === "form_for_gvp")].sort((a, b) => {
+    const wardA = a["GVP Ward"] ? Number(a["GVP Ward"]) : Infinity;
+    const wardB = b["GVP Ward"] ? Number(b["GVP Ward"]) : Infinity;
+    return wardA - wardB;
+  });
 
   const rowColors = [
     "#FFEBEE",
@@ -432,6 +436,21 @@ const COLORS = [
   "#808080",
 ];
 
+// Colors for problems bar chart
+const PROBLEMS_COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#413ea0"];
+
+// Colors for reasons bar chart
+const REASONS_COLORS = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"];
+
+// Colors for who dispose bar chart
+const WHO_DISPOSE_COLORS = ["#FF4500", "#2E8B57", "#4682B4", "#DAA520", "#6A5ACD"];
+
+// Colors for setting bar chart
+const SETTING_COLORS = ["#FF4500", "#2E8B57", "#4682B4", "#DAA520", "#6A5ACD"];
+
+// Colors for solution bar chart
+const SOLUTION_COLORS = ["#FF4500", "#2E8B57", "#4682B4", "#DAA520", "#6A5ACD"];
+
 // Card size classes
 const CARD_SIZE_CLASSES = "w-[250px] h-32";
 
@@ -457,6 +476,90 @@ const calculateProblemsData = (data) => {
       value: (count / total) * 100,
     }))
     .sort((a, b) => b.value - a.value);
+};
+
+// Calculate Reasons Data
+const calculateReasonsData = (data) => {
+  const reasonsCount = {
+    "No Regular Collection Vehicle": 0,
+    "Random People Throwing Garbage": 0,
+    "Due to User fee": 0,
+    "Mismatch of Vehicle Time": 0,
+    "Due to Narrow Road": 0,
+    "Because of Market and Street Vendors": 0,
+  };
+  data.forEach((row) => {
+    Object.keys(reasonsCount).forEach((reason) => {
+      if (row[reason] === 1) reasonsCount[reason] += 1;
+    });
+  });
+  const total = data.length;
+  return Object.entries(reasonsCount)
+    .filter(([_, count]) => count > 0)
+    .map(([reason, count]) => ({
+      name: reason,
+      value: (count / total) * 100,
+    }))
+    .sort((a, b) => b.value - a.value);
+};
+
+// Calculate Who Dispose Data
+const calculateWhoDisposeData = (data) => {
+  const disposeCount = {};
+  data.forEach((row) => {
+    const disposeValue = row["Who Dispose"];
+    if (disposeValue && disposeValue !== "N/A" && disposeValue.trim() !== "") {
+      disposeCount[disposeValue] = (disposeCount[disposeValue] || 0) + 1;
+    }
+  });
+  const total = data.length;
+  return Object.entries(disposeCount)
+    .map(([name, count]) => ({
+      name,
+      value: (count / total) * 100,
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5); // Top 5
+};
+
+// Calculate Setting Data
+const calculateSettingData = (data) => {
+  const settingCount = {};
+  data.forEach((row) => {
+    const settingValue = row["In_what_setting_is_the_GVP_pre"];
+    const areaValue = row["Kindly_specify_the_area"];
+    const displayValue = settingValue === "other" && areaValue ? areaValue : settingValue || "Unknown";
+    if (displayValue && displayValue.trim() !== "") {
+      settingCount[displayValue] = (settingCount[displayValue] || 0) + 1;
+    }
+  });
+  const total = data.length;
+  return Object.entries(settingCount)
+    .map(([name, count]) => ({
+      name,
+      value: (count / total) * 100,
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5); // Top 5
+};
+
+// Calculate Solution Data
+const calculateSolutionData = (data) => {
+  const solutionCount = {};
+  data.forEach((row) => {
+    const solutionValue = row["Solution Suggested by Interviewee"];
+    if (solutionValue && solutionValue.trim() !== "" && solutionValue !== "N/A") {
+      solutionCount[solutionValue] = (solutionCount[solutionValue] || 0) + 1;
+    }
+  });
+  const total = data.length;
+  return Object.entries(solutionCount)
+    .map(([name, count]) => ({
+      name,
+      value: (count / total) * 100,
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5); // Top 5
 };
 
 function App() {
@@ -542,6 +645,18 @@ function App() {
   // Problems data
   const problemsData = calculateProblemsData(filteredDataForCards);
 
+  // Reasons data
+  const reasonsData = calculateReasonsData(filteredDataForCards);
+
+  // Who Dispose data
+  const whoDisposeData = calculateWhoDisposeData(filteredDataForCards);
+
+  // Setting data
+  const settingData = calculateSettingData(filteredDataForCards);
+
+  // Solution data
+  const solutionData = calculateSolutionData(filteredDataForCards);
+
   const mapCenter = [21.1458, 79.0882];
 
   // Called when marker clicked -> select corresponding table row and center map
@@ -601,6 +716,11 @@ function App() {
     );
   };
 
+  // Handle select all wards
+  const handleSelectAll = () => {
+    setSelectedWards(uniqueWards);
+  };
+
   // Toggle dropdown visibility
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -654,6 +774,19 @@ function App() {
               </button>
               {isDropdownOpen && (
                 <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <label
+                    key="all"
+                    className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      value="all"
+                      checked={selectedWards.length === uniqueWards.length}
+                      onChange={handleSelectAll}
+                      className="form-checkbox h-4 w-4 text-yellow-500"
+                    />
+                    <span className="text-sm">All</span>
+                  </label>
                   {uniqueWards.map((ward) => (
                     <label
                       key={ward}
@@ -707,9 +840,9 @@ function App() {
           {/* DataTable */}
           <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200 h-[500px]">
             <DataTable
-  data={selectedRowIndex !== null ? [filteredTableData[selectedRowIndex]] : filteredDataForCards}
-  onRowClick={handleRowClick}
-  selectedRowIndex={selectedRowIndex}
+              data={selectedRowIndex !== null ? [filteredTableData[selectedRowIndex]] : filteredDataForCards}
+              onRowClick={handleRowClick}
+              selectedRowIndex={selectedRowIndex}
             />
           </div>
         </div>
@@ -728,7 +861,7 @@ function App() {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               {(selectedRow ? [selectedRow] : filteredDataForCards)
-  .filter((row) => row["GVP Latitude"] && row["GVP Longitude"])
+                .filter((row) => row["GVP Latitude"] && row["GVP Longitude"])
                 .map((row, idx) => {
                   const lat = Number(row["GVP Latitude"]);
                   const lng = Number(row["GVP Longitude"]);
@@ -780,24 +913,104 @@ function App() {
                 })}
             </MapContainer>
           </div>
-          {/* Problems Card below Map */}
-          <div className="w-[450px] bg-white p-4 rounded-lg shadow-lg border border-gray-200 mt-4">
-            <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
-              Top Problems Faced by Residents around GVP
-            </h2>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={problemsData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                <YAxis dataKey="name" type="category" width={150} />
-                <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
-                <Bar dataKey="value" fill="#8884d8">
-                  {problemsData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          {/* Problems Card and Reasons Card */}
+          <div className="flex flex-row gap-4 mt-4">
+            <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
+                Top Problems Faced by Residents around GVP
+              </h2>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={problemsData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
+                  <YAxis dataKey="name" type="category" width={150} />
+                  <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
+                  <Bar dataKey="value" barSize={20} radius={[4, 4, 0, 0]}>
+                    {problemsData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={PROBLEMS_COLORS[index % PROBLEMS_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
+                Reasons for Waste Accumulation
+              </h2>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={reasonsData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
+                  <YAxis dataKey="name" type="category" width={150} />
+                  <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
+                  <Bar dataKey="value" barSize={20}>
+                    {reasonsData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={REASONS_COLORS[index % REASONS_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          {/* Who Dispose and Setting Cards */}
+          <div className="flex flex-row gap-4 mt-4">
+            <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
+                Who Dispose the Most
+              </h2>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={whoDisposeData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
+                  <YAxis dataKey="name" type="category" width={150} />
+                  <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
+                  <Bar dataKey="value" barSize={30}>
+                    {whoDisposeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={WHO_DISPOSE_COLORS[index % WHO_DISPOSE_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
+                Top Settings Where GVPs Are Found
+              </h2>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={settingData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
+                  <YAxis dataKey="name" type="category" width={150} />
+                  <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
+                  <Bar dataKey="value" barSize={30}>
+                    {settingData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={SETTING_COLORS[index % SETTING_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          {/* Solution Card */}
+          <div className="flex flex-row gap-4 mt-4">
+            <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200" style={{ width: '50%' }}>
+              <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
+                Top Solutions Suggested by Interviewees
+              </h2>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={solutionData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
+                  <YAxis dataKey="name" type="category" width={150} />
+                  <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
+                  <Bar dataKey="value" barSize={30}>
+                    {solutionData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={SOLUTION_COLORS[index % SOLUTION_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       </div>
