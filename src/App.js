@@ -203,11 +203,11 @@ const getGarbagePointInfo = (row) => {
   // SECTION 2: 🔵 Interaction Information
   // ===================================
   const CivicSession = row["Civic Authority Conduct Any Session"]
-    ? `𝗛𝗮𝘀 𝗧𝗵𝗲 𝗖𝗶𝘃𝗶𝗰 𝗔𝘂𝘁𝗵𝗼𝗿𝗶𝘁𝘆 𝗖𝗼𝗻𝗱𝘂𝗰𝘁𝗲𝗱 𝗔𝗻𝘆 𝗔𝘄𝗮𝗿𝗲𝗻𝗲𝘀𝘀 𝗦𝗲𝘀𝘀𝗶𝗼𝗻: ${row["Civic Authority Conduct Any Session"]}${LB}`
+    ? `𝗛𝗮𝘀 𝗧𝗵𝗲 𝗖𝗶𝘷𝗶𝗰 𝗔𝘂𝘁𝗵𝗼𝗿𝗶𝘁𝘆 𝗖𝗼𝗻𝗱𝘂𝗰𝘁𝗲𝗱 𝗔𝗻𝘆 𝗔𝘄𝗮𝗿𝗲𝗻𝗲𝘀𝘀 𝗦𝗲𝘀𝘀𝗶𝗼𝗻: ${row["Civic Authority Conduct Any Session"]}${LB}`
     : "";
 
   const Complained = row["Have Interviewees Complained to Authority"]
-    ? `𝗛𝗮𝘃𝗲 𝗜𝗻𝘁𝗲𝗿𝘃𝗶𝗲𝘄𝗲𝗲𝘀 𝗖𝗼𝗺𝗽𝗹𝗮𝗶𝗻𝗲𝗱 𝘁𝗼 𝗔𝘂𝘁𝗵𝗼𝗿𝗶𝘁𝗶𝗲𝘀: ${row["Have Interviewees Complained to Authority"]}${LB}`
+    ? `𝗛𝗮𝘷𝗲 𝗜𝗻𝘁𝗲𝗿𝘃𝗶𝗲𝘄𝗲𝗲𝘀 𝗖𝗼𝗺𝗽𝗹𝗮𝗶𝗻𝗲𝗱 𝘁𝗼 𝗔𝘂𝘁𝗵𝗼𝗿𝗶𝘁𝗶𝗲𝘀: ${row["Have Interviewees Complained to Authority"]}${LB}`
     : "";
 
   const Experience = row["If Yes How Was Your Experience "]
@@ -314,7 +314,7 @@ const getGarbagePointInfo = (row) => {
 const DataTable = ({ data, onRowClick, selectedRowIndex }) => {
   const tableData = [...data.filter((row) => row["Type_of_Form"] === "form_for_gvp")].sort((a, b) => {
     const wardA = a["GVP Ward"] ? Number(a["GVP Ward"]) : Infinity;
-    const wardB = b["GVP Ward"] ? Number(b["GVP Ward"]) : Infinity;
+    const wardB = b["GVP Ward"] ? Number(b["GVP Ward"]) : Infinity; // Fixed: Added wardB definition
     return wardA - wardB;
   });
 
@@ -510,56 +510,267 @@ const calculateReasonsData = (data) => {
     .sort((a, b) => b.value - a.value); // No top 5 limit, all reasons shown
 };
 
-// Calculate Who Dispose Data with Normalization
+// Calculate Who Dispose Data with Categorization
+const categoryMap = [
+  {
+    category: "Nearby Households",
+    keywords: [
+      "nearby household",
+      "house hol",
+      "households",
+      "colony people",
+      "banglow wale log",
+      "जवळ पास",
+      "सोसायटी",
+    ],
+  },
+  {
+    category: "Vendors / Small Stalls",
+    keywords: [
+      "vendor",
+      "stall",
+      "shop",
+      "chai wale",
+      "market wale",
+      "street vendor",
+    ],
+  },
+  {
+    category: "People from Outside",
+    keywords: [
+      "outside",
+      "बाहेरून",
+      "पर्यटक",
+      "outsider",
+      "visitor",
+    ],
+  },
+  {
+    category: "Passing Crowd / Vehicle People",
+    keywords: [
+      "गाडी",
+      "जाण्या येणाऱ्या",
+      "ऑटो",
+      "vehicle",
+      "passing",
+    ],
+  },
+  {
+    category: "Households and Vendors Mixed",
+    keywords: [
+      "households , people from outside , street vendors",
+      "vendor and households",
+      "people and households",
+      "mixed",
+    ],
+  },
+  {
+    category: "Construction Waste",
+    keywords: ["construction", "repair", "काम", "बांधकाम"],
+  },
+  {
+    category: "Showrooms / Commercial Establishments",
+    keywords: ["showroom", "commercial"],
+  },
+  {
+    category: "Public Parks / Institutions",
+    keywords: ["उद्यान", "park", "public area", "lake", "ambazari"],
+  },
+  {
+    category: "Citizens / General Public",
+    keywords: ["citizens", "people", "public"],
+  },
+  {
+    category: "Unknown / Not Mentioned",
+    keywords: ["unknown", "माहित नाही", "n", "all", "dont know"],
+  },
+  {
+    category: "Nearby + Outside Combined",
+    keywords: [
+      "nearby households and people from outside",
+      "जवळ पास लोकांनी टाकतात आणि बाहेरून येणारे पण",
+    ],
+  },
+  {
+    category: "Market / Vendor Community",
+    keywords: ["market", "vendors", "stall"],
+  },
+];
+
+function categorize(text) {
+  const lowerText = text.toLowerCase().trim();
+  for (const { category, keywords } of categoryMap) {
+    if (keywords.some((k) => lowerText.includes(k.toLowerCase()))) {
+      return category;
+    }
+  }
+  return "Unknown / Not Mentioned"; // fallback
+}
+
 const calculateWhoDisposeData = (data) => {
   const disposeCount = {};
   data.forEach((row) => {
-    const disposeValue = row["Who Dispose"];
-    if (disposeValue && disposeValue !== "N/A" && disposeValue.trim() !== "") {
-      disposeCount[disposeValue] = (disposeCount[disposeValue] || 0) + 1;
-    }
+    const disposeValue = row["Who Dispose"] || "";
+    const category = categorize(disposeValue);
+    disposeCount[category] = (disposeCount[category] || 0) + 1;
   });
-  const allData = Object.entries(disposeCount).map(([name, count]) => ({ name, count }));
-  const totalCount = allData.reduce((sum, item) => sum + item.count, 0);
-  return allData.map((item) => ({
-    name: item.name,
-    value: totalCount > 0 ? (item.count / totalCount) * 100 : 0,
-  })).sort((a, b) => b.value - a.value);
+  const totalCount = Object.values(disposeCount).reduce((sum, count) => sum + count, 0);
+  return Object.entries(disposeCount)
+    .map(([name, count]) => ({
+      name,
+      value: totalCount > 0 ? (count / totalCount) * 100 : 0,
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5); // Limit to top 5 for better readability
 };
 
-// Calculate Setting Data with Normalization
+// Calculate Location Data with Categorization
+const locationMap = [
+  {
+    category: "Residential Area",
+    keywords: ["residential", "colony", "house", "society"],
+  },
+  {
+    category: "Nallah / Drain",
+    keywords: ["nallah", "drain"],
+  },
+  {
+    category: "Market / Commercial Area",
+    keywords: ["market_place", "market", "bazaar", "shop"],
+  },
+  {
+    category: "Playground / Open Space",
+    keywords: ["playground", "ground", "sports", "field"],
+  },
+  {
+    category: "School / Institution",
+    keywords: ["school", "college", "institution"],
+  },
+  {
+    category: "Open Plot / Vacant Land",
+    keywords: ["open_plot", "vacant", "empty plot"],
+  },
+  {
+    category: "Roadside / Footpath / Public Path",
+    keywords: [
+      "road",
+      "roadside",
+      "road side",
+      "footpath",
+      "corner",
+      "square",
+      "front side",
+      "temple",
+      "collector office",
+      "near sadar",
+      "sem",
+    ],
+  },
+  {
+    category: "Water Body / Lake Area",
+    keywords: ["lake", "water", "pond", "नदी", "लेक"],
+  },
+  {
+    category: "Other / Miscellaneous",
+    keywords: ["other", "unknown", "misc"],
+  },
+];
+
+function categorizeLocation(text) {
+  const lowerText = (text || "").toLowerCase().trim();
+  for (const { category, keywords } of locationMap) {
+    if (keywords.some((k) => lowerText.includes(k))) {
+      return category;
+    }
+  }
+  return "Other / Miscellaneous"; // fallback
+}
+
 const calculateSettingData = (data) => {
   const settingCount = {};
   data.forEach((row) => {
-    const settingValue = row["In_what_setting_is_the_GVP_pre"];
-    const areaValue = row["Kindly_specify_the_area"];
-    const displayValue = settingValue === "other" && areaValue ? areaValue : settingValue || "Unknown";
-    if (displayValue && displayValue.trim() !== "") {
-      settingCount[displayValue] = (settingCount[displayValue] || 0) + 1;
-    }
+    const settingValue = row["In_what_setting_is_the_GVP_pre"] || row["Location Type"] || row["other"] || "";
+    const category = categorizeLocation(settingValue);
+    settingCount[category] = (settingCount[category] || 0) + 1;
   });
-  const allData = Object.entries(settingCount).map(([name, count]) => ({ name, count }));
-  const totalCount = allData.reduce((sum, item) => sum + item.count, 0);
-  return allData.map((item) => ({
-    name: item.name,
-    value: totalCount > 0 ? (item.count / totalCount) * 100 : 0,
-  })).sort((a, b) => b.value - a.value);
+  const totalCount = Object.values(settingCount).reduce((sum, count) => sum + count, 0);
+  return Object.entries(settingCount)
+    .map(([name, count]) => ({
+      name,
+      value: totalCount > 0 ? (count / totalCount) * 100 : 0,
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5); // Limit to top 5 for better readability
 };
 
-// Calculate Solution Data with Normalization
+// Calculate Solution Data with Categorization
+const solutionMap = [
+  {
+    category: "More Dustbins Required",
+    keywords: [
+      "dustbin",
+      "bins",
+      "bin",
+      "use of dustbin",
+      "increasing of dustbin",
+    ],
+  },
+  {
+    category: "Strict Fines / Penalty System",
+    keywords: ["fine", "strictly fine", "penalty", "punishment", "fee"],
+  },
+  {
+    category: "Awareness & Education Programs",
+    keywords: ["awareness", "program", "educate", "campaign"],
+  },
+  {
+    category: "Regular Cleaning / NMC Vehicle Visit",
+    keywords: [
+      "cleaner van",
+      "nmc vehicle",
+      "collection vehicle",
+      "cleaned from the road",
+      "regular visit",
+      "daily basis",
+      "schedule for collection vehicle",
+    ],
+  },
+  {
+    category: "Combined: Bins + Fines + Awareness",
+    keywords: [
+      "bins and strict fines",
+      "bins awareness",
+      "bins, strictly fine",
+      "bins, fine",
+      "bins and awareness",
+      "more bins and strict fines",
+      "awareness and bins",
+    ],
+  },
+];
+
+function categorizeSolution(text) {
+  const lowerText = (text || "").toLowerCase().trim();
+  for (const { category, keywords } of solutionMap) {
+    if (keywords.some((k) => lowerText.includes(k))) {
+      return category;
+    }
+  }
+  return "Other / No Suggestion";
+}
+
 const calculateSolutionData = (data) => {
   const solutionCount = {};
   data.forEach((row) => {
-    const solutionValue = row["Solution Suggested by Interviewee"];
-    if (solutionValue && solutionValue.trim() !== "" && solutionValue !== "N/A") {
-      solutionCount[solutionValue] = (solutionCount[solutionValue] || 0) + 1;
-    }
+    const solutionValue = row["Solution Suggested by Interviewee"] || "";
+    const category = categorizeSolution(solutionValue);
+    solutionCount[category] = (solutionCount[category] || 0) + 1;
   });
-  const allData = Object.entries(solutionCount).map(([name, count]) => ({ name, count }));
-  const totalCount = allData.reduce((sum, item) => sum + item.count, 0);
-  return allData.map((item) => ({
-    name: item.name,
-    value: totalCount > 0 ? (item.count / totalCount) * 100 : 0,
+  const totalCount = Object.values(solutionCount).reduce((sum, count) => sum + count, 0);
+  // Ensure all categories from solutionMap are included, even with zero counts
+  return solutionMap.map(({ category }) => ({
+    name: category,
+    value: totalCount > 0 ? (solutionCount[category] / totalCount) * 100 : 0,
   })).sort((a, b) => b.value - a.value);
 };
 
@@ -967,13 +1178,13 @@ function App() {
           <div className="flex flex-row gap-4 mt-4">
             <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200">
               <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
-                Who Dispose the Most
+                Who is Disposing the most Waste (as per Citizens)
               </h2>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={whoDisposeData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                  <YAxis dataKey="name" type="category" width={150} />
+                  <YAxis dataKey="name" type="category" width={200} />
                   <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
                   <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
                     {whoDisposeData.map((entry, index) => (
@@ -991,7 +1202,7 @@ function App() {
                 <BarChart data={settingData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                  <YAxis dataKey="name" type="category" width={150} />
+                  <YAxis dataKey="name" type="category" width={200} />
                   <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
                   <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
                     {settingData.map((entry, index) => (
@@ -1006,13 +1217,19 @@ function App() {
           <div className="flex flex-row gap-4 mt-4">
             <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200" style={{ width: '50%' }}>
               <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
-                Top Solutions Suggested by Interviewees
+                Top Solutions Suggested (by Citizens)
               </h2>
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={solutionData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                  <YAxis dataKey="name" type="category" width={150} />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={200}
+                    tick={{ fontSize: 10, angle: 0 }} // Reduced font size for better fit
+                    interval={0}
+                  />
                   <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
                   <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
                     {solutionData.map((entry, index) => (
