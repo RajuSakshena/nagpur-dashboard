@@ -242,11 +242,10 @@ const getGarbagePointInfo = (row) => {
   const wasteReasonsMap = {
     "No Regular Collection Vehicle": "• No Regular Collection Vehicle",
     "Random People Throwing Garbage": "• Random People Throwing Garbage",
-    "Due to User fee": "• Due to User fee",
+    "Due To User Fee": "• Due To User Fee",
     "Mismatch of Vehicle Time": "• Mismatch of Vehicle Time",
     "Due to Narrow Road": "• Due to Narrow Road",
-    "Because of Market and Street Vendors":
-      "• Because of Market and Street Vendors",
+    "Because of Market and Street Vendors": "• Because of Market and Street Vendors",
   };
 
   const WasteReasons = Object.keys(wasteReasonsMap)
@@ -436,25 +435,35 @@ const COLORS = [
   "#808080",
 ];
 
-// Colors for problems bar chart
-const PROBLEMS_COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#413ea0"];
-
-// Colors for reasons bar chart
-const REASONS_COLORS = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"];
-
-// Colors for who dispose bar chart
-const WHO_DISPOSE_COLORS = ["#FF4500", "#2E8B57", "#4682B4", "#DAA520", "#6A5ACD"];
-
-// Colors for setting bar chart
-const SETTING_COLORS = ["#FF4500", "#2E8B57", "#4682B4", "#DAA520", "#6A5ACD"];
-
-// Colors for solution bar chart
-const SOLUTION_COLORS = ["#FF4500", "#2E8B57", "#4682B4", "#DAA520", "#6A5ACD"];
+// Colors for bar charts
+const BAR_COLORS = [
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#A020F0",
+];
 
 // Card size classes
 const CARD_SIZE_CLASSES = "w-[250px] h-32";
 
-// Calculate Problems Data
+// Custom label for BarCharts (moved outside)
+const renderCustomBarLabel = ({ x, y, width, value, height }) => {
+  return (
+    <text
+      x={x + width + 5} // Adjusted to place label outside
+      y={y + height / 2}
+      fill="#333"
+      textAnchor="start"
+      dominantBaseline="middle"
+      style={{ fontSize: "12px", fontWeight: "bold" }}
+    >
+      {`${value.toFixed(1)}%`}
+    </text>
+  );
+};
+
+// Calculate Problems Data with Normalization
 const calculateProblemsData = (data) => {
   const problemsCount = {
     "Bad Odour": 0,
@@ -468,42 +477,40 @@ const calculateProblemsData = (data) => {
       if (row[problem] === 1) problemsCount[problem] += 1;
     });
   });
-  const total = data.length;
+  const totalCount = Object.values(problemsCount).reduce((sum, count) => sum + count, 0);
   return Object.entries(problemsCount)
-    .filter(([_, count]) => count > 0)
     .map(([problem, count]) => ({
       name: problem,
-      value: (count / total) * 100,
+      value: totalCount > 0 ? (count / totalCount) * 100 : 0,
     }))
     .sort((a, b) => b.value - a.value);
 };
 
-// Calculate Reasons Data
+// Calculate Reasons Data with Normalization
 const calculateReasonsData = (data) => {
   const reasonsCount = {
     "No Regular Collection Vehicle": 0,
     "Random People Throwing Garbage": 0,
-    "Due to User fee": 0,
+    "Due To User Fee": 0,
     "Mismatch of Vehicle Time": 0,
     "Due to Narrow Road": 0,
     "Because of Market and Street Vendors": 0,
   };
   data.forEach((row) => {
     Object.keys(reasonsCount).forEach((reason) => {
-      if (row[reason] === 1) reasonsCount[reason] += 1;
+      if (row[reason] === 1 || row[reason] === true) reasonsCount[reason] += 1;
     });
   });
-  const total = data.length;
+  const totalCount = Object.values(reasonsCount).reduce((sum, count) => sum + count, 0);
   return Object.entries(reasonsCount)
-    .filter(([_, count]) => count > 0)
     .map(([reason, count]) => ({
       name: reason,
-      value: (count / total) * 100,
+      value: totalCount > 0 ? (count / totalCount) * 100 : 0,
     }))
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => b.value - a.value); // No top 5 limit, all reasons shown
 };
 
-// Calculate Who Dispose Data
+// Calculate Who Dispose Data with Normalization
 const calculateWhoDisposeData = (data) => {
   const disposeCount = {};
   data.forEach((row) => {
@@ -512,17 +519,15 @@ const calculateWhoDisposeData = (data) => {
       disposeCount[disposeValue] = (disposeCount[disposeValue] || 0) + 1;
     }
   });
-  const total = data.length;
-  return Object.entries(disposeCount)
-    .map(([name, count]) => ({
-      name,
-      value: (count / total) * 100,
-    }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5); // Top 5
+  const allData = Object.entries(disposeCount).map(([name, count]) => ({ name, count }));
+  const totalCount = allData.reduce((sum, item) => sum + item.count, 0);
+  return allData.map((item) => ({
+    name: item.name,
+    value: totalCount > 0 ? (item.count / totalCount) * 100 : 0,
+  })).sort((a, b) => b.value - a.value);
 };
 
-// Calculate Setting Data
+// Calculate Setting Data with Normalization
 const calculateSettingData = (data) => {
   const settingCount = {};
   data.forEach((row) => {
@@ -533,17 +538,15 @@ const calculateSettingData = (data) => {
       settingCount[displayValue] = (settingCount[displayValue] || 0) + 1;
     }
   });
-  const total = data.length;
-  return Object.entries(settingCount)
-    .map(([name, count]) => ({
-      name,
-      value: (count / total) * 100,
-    }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5); // Top 5
+  const allData = Object.entries(settingCount).map(([name, count]) => ({ name, count }));
+  const totalCount = allData.reduce((sum, item) => sum + item.count, 0);
+  return allData.map((item) => ({
+    name: item.name,
+    value: totalCount > 0 ? (item.count / totalCount) * 100 : 0,
+  })).sort((a, b) => b.value - a.value);
 };
 
-// Calculate Solution Data
+// Calculate Solution Data with Normalization
 const calculateSolutionData = (data) => {
   const solutionCount = {};
   data.forEach((row) => {
@@ -552,14 +555,12 @@ const calculateSolutionData = (data) => {
       solutionCount[solutionValue] = (solutionCount[solutionValue] || 0) + 1;
     }
   });
-  const total = data.length;
-  return Object.entries(solutionCount)
-    .map(([name, count]) => ({
-      name,
-      value: (count / total) * 100,
-    }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5); // Top 5
+  const allData = Object.entries(solutionCount).map(([name, count]) => ({ name, count }));
+  const totalCount = allData.reduce((sum, item) => sum + item.count, 0);
+  return allData.map((item) => ({
+    name: item.name,
+    value: totalCount > 0 ? (item.count / totalCount) * 100 : 0,
+  })).sort((a, b) => b.value - a.value);
 };
 
 function App() {
@@ -766,11 +767,12 @@ function App() {
             <div className="relative">
               <button
                 onClick={toggleDropdown}
-                className="w-full p-2 border rounded-lg shadow-sm bg-white text-left focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                className="w-full p-2 border rounded-lg shadow-sm bg-white text-left focus:outline-none focus:ring-2 focus:ring-yellow-500 flex justify-between items-center"
               >
                 {selectedWards.length > 0
                   ? `${selectedWards.length} ward(s) selected`
                   : "Select Wards"}
+                <span className="ml-2">▼</span>
               </button>
               {isDropdownOpen && (
                 <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -807,6 +809,15 @@ function App() {
             </div>
           </div>
 
+          {/* DataTable */}
+          <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200 h-[500px]">
+            <DataTable
+              data={selectedRowIndex !== null ? [filteredTableData[selectedRowIndex]] : filteredDataForCards}
+              onRowClick={handleRowClick}
+              selectedRowIndex={selectedRowIndex}
+            />
+          </div>
+
           {/* Pie Chart */}
           <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
@@ -835,15 +846,6 @@ function App() {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
-          </div>
-
-          {/* DataTable */}
-          <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200 h-[500px]">
-            <DataTable
-              data={selectedRowIndex !== null ? [filteredTableData[selectedRowIndex]] : filteredDataForCards}
-              onRowClick={handleRowClick}
-              selectedRowIndex={selectedRowIndex}
-            />
           </div>
         </div>
 
@@ -913,6 +915,9 @@ function App() {
                 })}
             </MapContainer>
           </div>
+          <h2 className="text-2xl font-bold mt-4 text-center" style={{ color: '#2E7D32' }}>
+            Key Findings from the GVP Survey
+          </h2>
           {/* Problems Card and Reasons Card */}
           <div className="flex flex-row gap-4 mt-4">
             <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200">
@@ -924,10 +929,10 @@ function App() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
                   <YAxis dataKey="name" type="category" width={150} />
-                  <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
-                  <Bar dataKey="value" barSize={20} radius={[4, 4, 0, 0]}>
+                  <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
+                  <Bar dataKey="value" barSize={20} radius={[4, 4, 0, 0]} label={renderCustomBarLabel}>
                     {problemsData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={PROBLEMS_COLORS[index % PROBLEMS_COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={BAR_COLORS[index % BAR_COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -941,11 +946,17 @@ function App() {
                 <BarChart data={reasonsData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                  <YAxis dataKey="name" type="category" width={150} />
-                  <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
-                  <Bar dataKey="value" barSize={20}>
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={200} // Increased width to accommodate longer names
+                    tick={{ fontSize: 12, angle: 0 }} // Ensure legible text
+                    interval={0} // Show all ticks
+                  />
+                  <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
+                  <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
                     {reasonsData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={REASONS_COLORS[index % REASONS_COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={BAR_COLORS[index % BAR_COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -963,10 +974,10 @@ function App() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
                   <YAxis dataKey="name" type="category" width={150} />
-                  <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
-                  <Bar dataKey="value" barSize={30}>
+                  <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
+                  <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
                     {whoDisposeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={WHO_DISPOSE_COLORS[index % WHO_DISPOSE_COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={BAR_COLORS[index % BAR_COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -981,10 +992,10 @@ function App() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
                   <YAxis dataKey="name" type="category" width={150} />
-                  <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
-                  <Bar dataKey="value" barSize={30}>
+                  <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
+                  <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
                     {settingData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={SETTING_COLORS[index % SETTING_COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={BAR_COLORS[index % BAR_COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -1002,10 +1013,10 @@ function App() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
                   <YAxis dataKey="name" type="category" width={150} />
-                  <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
-                  <Bar dataKey="value" barSize={30}>
+                  <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
+                  <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
                     {solutionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={SOLUTION_COLORS[index % SOLUTION_COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={BAR_COLORS[index % BAR_COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
