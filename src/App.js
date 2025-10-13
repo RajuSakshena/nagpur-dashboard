@@ -207,7 +207,7 @@ const getGarbagePointInfo = (row) => {
     : "";
 
   const Complained = row["Have Interviewees Complained to Authority"]
-    ? `𝗛𝗮𝘷𝗲 𝗜𝗻𝘁𝗲𝗿𝘃𝗶𝗲𝘄𝗲𝗲𝘀 𝗖𝗼𝗺𝗽𝗹𝗮𝗶𝗻𝗲𝗱 𝘁𝗼 𝗔𝘂𝘁𝗵𝗼𝗿𝗶𝘁𝗶𝗲𝘀: ${row["Have Interviewees Complained to Authority"]}${LB}`
+    ? `𝗛𝗮𝘃𝗲 𝗜𝗻𝘁𝗲𝗿𝘃𝗶𝗲𝘄𝗲𝗲𝘀 𝗖𝗼𝗺𝗽𝗹𝗮𝗶𝗻𝗲𝗱 𝘁𝗼 𝗔𝘂𝘁𝗵𝗼𝗿𝗶𝘁𝗶𝗲𝘀: ${row["Have Interviewees Complained to Authority"]}${LB}`
     : "";
 
   const Experience = row["If Yes How Was Your Experience "]
@@ -877,7 +877,7 @@ function App() {
   // Solution data
   const solutionData = calculateSolutionData(filteredDataForCards);
 
-  const mapCenter = [21.1458, 79.0882];
+  const mapCenter = [21.135, 79.085]; // Adjusted to shift westward to cover right-side points
 
   // Called when marker clicked -> select corresponding table row and center map
   const handleMarkerClick = (row) => {
@@ -1074,7 +1074,7 @@ function App() {
             <MapContainer
               whenCreated={(map) => setMapInstance(map)}
               center={mapCenter}
-              zoom={13} // Increased default zoom to 15 for better visibility
+              zoom={13} // Updated to zoom 13 for broader view
               className="w-full h-full rounded-lg shadow-lg border border-gray-200"
             >
               <TileLayer
