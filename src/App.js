@@ -314,7 +314,7 @@ const getGarbagePointInfo = (row) => {
 const DataTable = ({ data, onRowClick, selectedRowIndex }) => {
   const tableData = [...data.filter((row) => row["Type_of_Form"] === "form_for_gvp")].sort((a, b) => {
     const wardA = a["GVP Ward"] ? Number(a["GVP Ward"]) : Infinity;
-    const wardB = b["GVP Ward"] ? Number(b["GVP Ward"]) : Infinity; // Fixed: Added wardB definition
+    const wardB = b["GVP Ward"] ? Number(b["GVP Ward"]) : Infinity;
     return wardA - wardB;
   });
 
@@ -703,55 +703,60 @@ const calculateSettingData = (data) => {
     .slice(0, 5); // Limit to top 5 for better readability
 };
 
-// Calculate Solution Data with Categorization
-const solutionMap = [
+// Solution Categories
+export const solutionCategories = [
   {
-    category: "More Dustbins Required",
+    category: "Infrastructure Improvement",
     keywords: [
       "dustbin",
       "bins",
       "bin",
+      "add dustbin",
       "use of dustbin",
       "increasing of dustbin",
+      "more bins",
+      "dust bin",
     ],
   },
   {
-    category: "Strict Fines / Penalty System",
+    category: "Enforcement Measures",
     keywords: ["fine", "strictly fine", "penalty", "punishment", "fee"],
   },
   {
-    category: "Awareness & Education Programs",
-    keywords: ["awareness", "program", "educate", "campaign"],
+    category: "Public Awareness & Education",
+    keywords: ["awareness", "educate", "program", "campaign", "awareness among"],
   },
   {
-    category: "Regular Cleaning / NMC Vehicle Visit",
+    category: "Operational Efficiency",
     keywords: [
       "cleaner van",
       "nmc vehicle",
       "collection vehicle",
-      "cleaned from the road",
       "regular visit",
       "daily basis",
-      "schedule for collection vehicle",
+      "cleaned from the road",
+      "cleaned",
     ],
   },
   {
-    category: "Combined: Bins + Fines + Awareness",
+    category: "Integrated / Combined Actions",
     keywords: [
       "bins and strict fines",
+      "camera",
+      "surveillance",
       "bins awareness",
       "bins, strictly fine",
       "bins, fine",
       "bins and awareness",
-      "more bins and strict fines",
-      "awareness and bins",
+      "multiple",
+      "board",
     ],
   },
 ];
 
-function categorizeSolution(text) {
+export function categorizeSolution(text) {
   const lowerText = (text || "").toLowerCase().trim();
-  for (const { category, keywords } of solutionMap) {
+  for (const { category, keywords } of solutionCategories) {
     if (keywords.some((k) => lowerText.includes(k))) {
       return category;
     }
@@ -759,18 +764,21 @@ function categorizeSolution(text) {
   return "Other / No Suggestion";
 }
 
+// Calculate Solution Data with Categorization
 const calculateSolutionData = (data) => {
   const solutionCount = {};
   data.forEach((row) => {
-    const solutionValue = row["Solution Suggested by Interviewee"] || "";
-    const category = categorizeSolution(solutionValue);
-    solutionCount[category] = (solutionCount[category] || 0) + 1;
+    const solutionValue = row["Solution Suggested by Interviewee"];
+    if (solutionValue && solutionValue.trim() !== "" && solutionValue !== "N/A") {
+      const category = categorizeSolution(solutionValue);
+      solutionCount[category] = (solutionCount[category] || 0) + 1;
+    }
   });
-  const totalCount = Object.values(solutionCount).reduce((sum, count) => sum + count, 0);
-  // Ensure all categories from solutionMap are included, even with zero counts
-  return solutionMap.map(({ category }) => ({
-    name: category,
-    value: totalCount > 0 ? (solutionCount[category] / totalCount) * 100 : 0,
+  const allData = Object.entries(solutionCount).map(([name, count]) => ({ name, count }));
+  const totalCount = allData.reduce((sum, item) => sum + item.count, 0);
+  return allData.map((item) => ({
+    name: item.name,
+    value: totalCount > 0 ? (item.count / totalCount) * 100 : 0,
   })).sort((a, b) => b.value - a.value);
 };
 
@@ -823,7 +831,7 @@ function App() {
       const lng = Number(selectedRow["GVP Longitude"]);
       if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
         try {
-          mapInstance.flyTo([lat, lng], Math.max(mapInstance.getZoom(), 14), {
+          mapInstance.flyTo([lat, lng], Math.max(mapInstance.getZoom(), 15), {
             animate: true,
             duration: 0.6,
           });
@@ -1066,7 +1074,7 @@ function App() {
             <MapContainer
               whenCreated={(map) => setMapInstance(map)}
               center={mapCenter}
-              zoom={12}
+              zoom={13} // Increased default zoom to 15 for better visibility
               className="w-full h-full rounded-lg shadow-lg border border-gray-200"
             >
               <TileLayer
@@ -1126,7 +1134,7 @@ function App() {
                 })}
             </MapContainer>
           </div>
-          <h2 className="text-2xl font-bold mt-4 text-center" style={{ color: '#2E7D32' }}>
+          <h2 className="text-2xl font-bold mt-4 text-center text-black">
             Key Findings from the GVP Survey
           </h2>
           {/* Problems Card and Reasons Card */}
@@ -1219,17 +1227,11 @@ function App() {
               <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
                 Top Solutions Suggested (by Citizens)
               </h2>
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={solutionData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    width={200}
-                    tick={{ fontSize: 10, angle: 0 }} // Reduced font size for better fit
-                    interval={0}
-                  />
+                  <YAxis dataKey="name" type="category" width={150} />
                   <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
                   <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
                     {solutionData.map((entry, index) => (
