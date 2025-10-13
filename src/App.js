@@ -203,7 +203,7 @@ const getGarbagePointInfo = (row) => {
   // SECTION 2: 🔵 Interaction Information
   // ===================================
   const CivicSession = row["Civic Authority Conduct Any Session"]
-    ? `𝗛𝗮𝘀 𝗧𝗵𝗲 𝗖𝗶𝘷𝗶𝗰 𝗔𝘂𝘁𝗵𝗼𝗿𝗶𝘁𝘆 𝗖𝗼𝗻𝗱𝘂𝗰𝘁𝗲𝗱 𝗔𝗻𝘆 𝗔𝘄𝗮𝗿𝗲𝗻𝗲𝘀𝘀 𝗦𝗲𝘀𝘀𝗶𝗼𝗻: ${row["Civic Authority Conduct Any Session"]}${LB}`
+    ? `𝗛𝗮𝘀 𝗧𝗵𝗲 𝗖𝗶𝘃𝗶𝗰 𝗔𝘂𝘁𝗵𝗼𝗿𝗶𝘁𝘆 𝗖𝗼𝗻𝗱𝘂𝗰𝘁𝗲𝗱 𝗔𝗻𝘆 𝗔𝘄𝗮𝗿𝗲𝗻𝗲𝘀𝘀 𝗦𝗲𝘀𝘀𝗶𝗼𝗻: ${row["Civic Authority Conduct Any Session"]}${LB}`
     : "";
 
   const Complained = row["Have Interviewees Complained to Authority"]
@@ -303,7 +303,7 @@ const getGarbagePointInfo = (row) => {
     ProblemsSection;
 
   const Section_Interaction = Section_Interaction_Body
-    ? `🔵 𝗜𝗻𝗳𝗼𝗿𝗺𝗮𝘁𝗶𝗼𝗻 𝗦𝗵𝗮𝗿𝗲𝗱 𝗯𝘆 𝗖𝗶𝘁𝗶𝘇𝗲𝗻𝘀${LB}${Section_Interaction_Body}`
+    ? `🔵 𝗜𝗻𝗳𝗼𝗿𝗺𝗮𝘁𝗶𝗼𝗻 𝗦𝗵𝗮𝗿𝗲𝗱 𝗯𝘆 𝗖𝗶𝘁𝗶𝗭𝗲𝗻𝘀${LB}${Section_Interaction_Body}`
     : "";
 
   // Final return
@@ -451,12 +451,12 @@ const CARD_SIZE_CLASSES = "w-[250px] h-32";
 const renderCustomBarLabel = ({ x, y, width, value, height }) => {
   return (
     <text
-      x={x + width + 5} // Adjusted to place label outside
+      x={x + width + 20} // Increased spacing to push label further right
       y={y + height / 2}
       fill="#333"
       textAnchor="start"
       dominantBaseline="middle"
-      style={{ fontSize: "12px", fontWeight: "bold" }}
+      style={{ fontSize: "14px", fontWeight: "bold" }} // Increased font size
     >
       {`${value.toFixed(1)}%`}
     </text>
@@ -507,7 +507,7 @@ const calculateReasonsData = (data) => {
       name: reason,
       value: totalCount > 0 ? (count / totalCount) * 100 : 0,
     }))
-    .sort((a, b) => b.value - a.value); // No top 5 limit, all reasons shown
+    .sort((a, b) => b.value - a.value);
 };
 
 // Calculate Who Dispose Data with Categorization
@@ -604,7 +604,7 @@ function categorize(text) {
       return category;
     }
   }
-  return "Unknown / Not Mentioned"; // fallback
+  return "Unknown / Not Mentioned";
 }
 
 const calculateWhoDisposeData = (data) => {
@@ -621,7 +621,7 @@ const calculateWhoDisposeData = (data) => {
       value: totalCount > 0 ? (count / totalCount) * 100 : 0,
     }))
     .sort((a, b) => b.value - a.value)
-    .slice(0, 5); // Limit to top 5 for better readability
+    .slice(0, 5);
 };
 
 // Calculate Location Data with Categorization
@@ -683,7 +683,7 @@ function categorizeLocation(text) {
       return category;
     }
   }
-  return "Other / Miscellaneous"; // fallback
+  return "Other / Miscellaneous";
 }
 
 const calculateSettingData = (data) => {
@@ -700,82 +700,112 @@ const calculateSettingData = (data) => {
       value: totalCount > 0 ? (count / totalCount) * 100 : 0,
     }))
     .sort((a, b) => b.value - a.value)
-    .slice(0, 5); // Limit to top 5 for better readability
+    .slice(0, 5);
 };
 
 // Solution Categories
 export const solutionCategories = [
   {
-    category: "Infrastructure Improvement",
+    category: "Bins and Facilites",
     keywords: [
-      "dustbin",
-      "bins",
-      "bin",
-      "add dustbin",
-      "use of dustbin",
-      "increasing of dustbin",
-      "more bins",
-      "dust bin",
+      "Dust bin at Roadside","Should Punishment Fee","More Bins", "Bins","More bins",
+      "More Bins Awareness Among People","Dustbins","Add a board ","Say to Use Of Dustbin",
+      "Add Dustbin"," Bins Too", " Dustbins and Strictly Fine", "Bins and Facilities and strict fines",
+      "Increasing of Dustbin",
     ],
   },
   {
-    category: "Enforcement Measures",
-    keywords: ["fine", "strictly fine", "penalty", "punishment", "fee"],
-  },
-  {
-    category: "Public Awareness & Education",
-    keywords: ["awareness", "educate", "program", "campaign", "awareness among"],
-  },
-  {
-    category: "Operational Efficiency",
+    category: "Technology-Enabled Monitoring",
     keywords: [
-      "cleaner van",
-      "nmc vehicle",
-      "collection vehicle",
-      "regular visit",
-      "daily basis",
-      "cleaned from the road",
-      "cleaned",
+      "Fine and Surveillance Camera at that Place", "Surveillance Camera at that Place",
+      "install camera on street.", "Should Camera Surveillance", 
     ],
   },
   {
-    category: "Integrated / Combined Actions",
+    category: "Strict Enforcement Measures ",
     keywords: [
-      "bins and strict fines",
-      "camera",
-      "surveillance",
-      "bins awareness",
-      "bins, strictly fine",
-      "bins, fine",
-      "bins and awareness",
-      "multiple",
-      "board",
+      "Strict Fines", "strictly fine for people",
+      "Strictly Fine","strict fines", "and strictly fine for people"
     ],
+  },  
+  {
+    category: "Public Awareness & Education ",
+    keywords: [
+      "Awareness Program", "Awareness Among People", "More Bins Awareness Among People",
+     ]
+  },
+  {
+    category: "Sanitization Vehicle Roster",
+    keywords: [
+      "Should Regular Visit of Cleaner Vans", 
+     ]
+  },
+  {
+    category: "Regulatory & Administrative Support",
+    keywords: [
+      "the NMC vehicle should collect this garbage from here .",
+     ]
+  },
+  {
+    category: "Efficient Waste Collection System",
+    keywords: [
+      "Proper schedule for collection vehicle","The Place Need to be get cleaned from the road side on daily basis.",
+     ]
+  },
+  {
+    category: "Neutral Feedback",
+    keywords: [
+      "Nothing",
+     ]
   },
 ];
 
 export function categorizeSolution(text) {
   const lowerText = (text || "").toLowerCase().trim();
   for (const { category, keywords } of solutionCategories) {
-    if (keywords.some((k) => lowerText.includes(k))) {
+    if (keywords.some((k) => lowerText.includes(k.toLowerCase()))) {
       return category;
     }
   }
-  return "Other / No Suggestion";
+  return null;  // Return null for unmatched to exclude "Other / No Suggestion"
 }
 
 // Calculate Solution Data with Categorization
 const calculateSolutionData = (data) => {
-  const solutionCount = {};
+  // Initialize solutionCount with all categories from solutionCategories
+  const solutionCount = solutionCategories.reduce((acc, { category }) => {
+    acc[category] = 0;
+    return acc;
+  }, {});
+
+  // Count occurrences from the data, only for matched categories
   data.forEach((row) => {
-    const solutionValue = row["Solution Suggested by Interviewee"];
-    if (solutionValue && solutionValue.trim() !== "" && solutionValue !== "N/A") {
-      const category = categorizeSolution(solutionValue);
-      solutionCount[category] = (solutionCount[category] || 0) + 1;
-    }
+    const columns = [
+      "Solution Suggested by Interviewee1",
+      "Solution Suggested by Interviewee2",
+      "Solution Suggested by Interviewee3"
+    ];
+    columns.forEach((col) => {
+      const solutionValue = row[col];
+      if (solutionValue && solutionValue.trim() !== "" && solutionValue !== "N/A") {
+        const category = categorizeSolution(solutionValue);
+        if (category) {
+          solutionCount[category] = (solutionCount[category] || 0) + 1;
+        }
+      }
+    });
   });
+
+  // Convert to the required format and calculate equal distribution if no data, otherwise proportional
   const allData = Object.entries(solutionCount).map(([name, count]) => ({ name, count }));
   const totalCount = allData.reduce((sum, item) => sum + item.count, 0);
+  if (totalCount === 0) {
+    // If no data, distribute 100% equally across all 8 categories
+    return solutionCategories.map(({ category }) => ({
+      name: category,
+      value: 100 / 8,
+    }));
+  }
   return allData.map((item) => ({
     name: item.name,
     value: totalCount > 0 ? (item.count / totalCount) * 100 : 0,
@@ -1074,7 +1104,7 @@ function App() {
             <MapContainer
               whenCreated={(map) => setMapInstance(map)}
               center={mapCenter}
-              zoom={13} // Updated to zoom 13 for broader view
+              zoom={13}
               className="w-full h-full rounded-lg shadow-lg border border-gray-200"
             >
               <TileLayer
@@ -1147,7 +1177,7 @@ function App() {
                 <BarChart data={problemsData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                  <YAxis dataKey="name" type="category" width={150} />
+                  <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 14, angle: 0, fill: "black" }} interval={0} />
                   <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
                   <Bar dataKey="value" barSize={20} radius={[4, 4, 0, 0]} label={renderCustomBarLabel}>
                     {problemsData.map((entry, index) => (
@@ -1168,9 +1198,9 @@ function App() {
                   <YAxis
                     dataKey="name"
                     type="category"
-                    width={200} // Increased width to accommodate longer names
-                    tick={{ fontSize: 12, angle: 0 }} // Ensure legible text
-                    interval={0} // Show all ticks
+                    width={200}
+                    tick={{ fontSize: 14, angle: 0, fill: "black" }}
+                    interval={0}
                   />
                   <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
                   <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
@@ -1192,7 +1222,7 @@ function App() {
                 <BarChart data={whoDisposeData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                  <YAxis dataKey="name" type="category" width={200} />
+                  <YAxis dataKey="name" type="category" width={200} tick={{ fontSize: 14, angle: 0, fill: "black" }} interval={0} />
                   <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
                   <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
                     {whoDisposeData.map((entry, index) => (
@@ -1210,7 +1240,7 @@ function App() {
                 <BarChart data={settingData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                  <YAxis dataKey="name" type="category" width={200} />
+                  <YAxis dataKey="name" type="category" width={200} tick={{ fontSize: 14, angle: 0, fill: "black" }} interval={0} />
                   <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
                   <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
                     {settingData.map((entry, index) => (
@@ -1227,11 +1257,11 @@ function App() {
               <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
                 Top Solutions Suggested (by Citizens)
               </h2>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={solutionData} layout="vertical">
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={solutionData} layout="vertical" margin={{ top: 20, right: 100, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                  <YAxis dataKey="name" type="category" width={150} />
+                  <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 14, angle: 0, fill: "black" }} interval={0} />
                   <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
                   <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
                     {solutionData.map((entry, index) => (
