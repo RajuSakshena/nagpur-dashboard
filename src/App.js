@@ -435,6 +435,14 @@ const COLORS = [
   "#808080",
 ];
 
+// Ward-specific color names for map markers (using predefined leaflet colors)
+const WARD_COLOR_MAP = {
+  "12": "red",
+  "13": "green",
+  "14": "blue",
+  "15": "orange", // Added orange for Ward 15
+};
+
 // Colors for bar charts
 const BAR_COLORS = [
   "#0088FE",
@@ -451,12 +459,12 @@ const CARD_SIZE_CLASSES = "w-[250px] h-32";
 const renderCustomBarLabel = ({ x, y, width, value, height }) => {
   return (
     <text
-      x={x + width + 20} // Increased spacing to push label further right
+      x={x + width + 20}
       y={y + height / 2}
       fill="#333"
       textAnchor="start"
       dominantBaseline="middle"
-      style={{ fontSize: "14px", fontWeight: "bold" }} // Increased font size
+      style={{ fontSize: "14px", fontWeight: "bold" }}
     >
       {`${value.toFixed(1)}%`}
     </text>
@@ -767,18 +775,16 @@ export function categorizeSolution(text) {
       return category;
     }
   }
-  return null;  // Return null for unmatched to exclude "Other / No Suggestion"
+  return null;
 }
 
 // Calculate Solution Data with Categorization
 const calculateSolutionData = (data) => {
-  // Initialize solutionCount with all categories from solutionCategories
   const solutionCount = solutionCategories.reduce((acc, { category }) => {
     acc[category] = 0;
     return acc;
   }, {});
 
-  // Count occurrences from the data, only for matched categories
   data.forEach((row) => {
     const columns = [
       "Solution Suggested by Interviewee1",
@@ -796,11 +802,9 @@ const calculateSolutionData = (data) => {
     });
   });
 
-  // Convert to the required format and calculate equal distribution if no data, otherwise proportional
   const allData = Object.entries(solutionCount).map(([name, count]) => ({ name, count }));
   const totalCount = allData.reduce((sum, item) => sum + item.count, 0);
   if (totalCount === 0) {
-    // If no data, distribute 100% equally across all 8 categories
     return solutionCategories.map(({ category }) => ({
       name: category,
       value: 100 / 8,
@@ -825,7 +829,6 @@ function App() {
       .then((json) => setAllData(json));
   }, []);
 
-  // ✅ Ward values are numeric in dataset, so normalize everything to string for UI
   const uniqueWards = useMemo(() => {
     const wardsSet = new Set(
       allData
@@ -839,7 +842,6 @@ function App() {
     return Array.from(wardsSet).sort((a, b) => Number(a) - Number(b));
   }, [allData]);
 
-  // ✅ When filtering, convert row["GVP Ward"] to string
   const filteredData = useMemo(() => {
     return allData.filter(
       (row) =>
@@ -854,7 +856,6 @@ function App() {
 
   const selectedRow = selectedRowIndex !== null ? filteredTableData[selectedRowIndex] : null;
 
-  // when selectedRow changes, pan/zoom map to it (if map available)
   useEffect(() => {
     if (mapInstance && selectedRow) {
       const lat = Number(selectedRow["GVP Latitude"]);
@@ -873,10 +874,9 @@ function App() {
   }, [selectedRow, mapInstance]);
 
   useEffect(() => {
-    setSelectedRowIndex(null); // clear row selection
+    setSelectedRowIndex(null);
   }, [selectedWards, allData]);
 
-  // Cards
   const filteredDataForCards = selectedRow ? [selectedRow] : filteredTableData;
 
   const totalGarbagePoints = filteredDataForCards.length;
@@ -887,29 +887,22 @@ function App() {
     return sum + weight;
   }, 0);
 
-  // Pie chart data
   const pieData = selectedRow
     ? calculatePieForRow(selectedRow)
     : calculateWasteTypeCounts(filteredDataForCards);
 
-  // Problems data
   const problemsData = calculateProblemsData(filteredDataForCards);
 
-  // Reasons data
   const reasonsData = calculateReasonsData(filteredDataForCards);
 
-  // Who Dispose data
   const whoDisposeData = calculateWhoDisposeData(filteredDataForCards);
 
-  // Setting data
   const settingData = calculateSettingData(filteredDataForCards);
 
-  // Solution data
   const solutionData = calculateSolutionData(filteredDataForCards);
 
-  const mapCenter = [21.135, 79.085]; // Adjusted to shift westward to cover right-side points
+  const mapCenter = [21.135, 79.085];
 
-  // Called when marker clicked -> select corresponding table row and center map
   const handleMarkerClick = (row) => {
     const keyOfRow = `${row["GVP Latitude"]}-${row["GVP Longitude"]}-${row["GVP Ward"]}`;
     const idx = filteredTableData.findIndex(
@@ -934,7 +927,6 @@ function App() {
     }
   };
 
-  // zoom button inside tooltip
   const handleZoomToMarker = (row, e) => {
     e?.stopPropagation();
     if (mapInstance) {
@@ -948,7 +940,6 @@ function App() {
     }
   };
 
-  // Handle row click in DataTable
   const handleRowClick = (rowIndex) => {
     if (selectedRowIndex === rowIndex) {
       setSelectedRowIndex(null);
@@ -957,7 +948,6 @@ function App() {
     }
   };
 
-  // Handle ward selection from checkboxes
   const handleWardChange = (e) => {
     const ward = e.target.value;
     const isChecked = e.target.checked;
@@ -966,12 +956,10 @@ function App() {
     );
   };
 
-  // Handle select all wards
   const handleSelectAll = () => {
     setSelectedWards(uniqueWards);
   };
 
-  // Toggle dropdown visibility
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -983,9 +971,7 @@ function App() {
       </h1>
 
       <div className="flex flex-col lg:flex-row gap-4 mb-8">
-        {/* Left column */}
         <div className="flex flex-col gap-4 w-[450px]">
-          {/* Cards */}
           <div className="flex flex-row flex-nowrap gap-4 overflow-x-auto pb-2">
             <div
               className={`bg-white p-4 rounded-lg shadow-lg text-center border-b-4 border-yellow-500 flex flex-col justify-center ${CARD_SIZE_CLASSES}`}
@@ -1010,7 +996,6 @@ function App() {
             </div>
           </div>
 
-          {/* Wards Dropdown with Checkboxes */}
           <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200 relative">
             <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">Wards</h2>
             <div className="relative">
@@ -1058,7 +1043,6 @@ function App() {
             </div>
           </div>
 
-          {/* DataTable */}
           <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200 h-[500px]">
             <DataTable
               data={selectedRowIndex !== null ? [filteredTableData[selectedRowIndex]] : filteredDataForCards}
@@ -1067,7 +1051,6 @@ function App() {
             />
           </div>
 
-          {/* Pie Chart */}
           <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
             <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
               Breakdown by Waste Type
@@ -1098,7 +1081,6 @@ function App() {
           </div>
         </div>
 
-        {/* Right column - Map and Problems Card */}
         <div className="flex-1">
           <div className="h-[600px]">
             <MapContainer
@@ -1119,10 +1101,25 @@ function App() {
                   const ward = row["GVP Ward"] || "";
                   const stableKey = `${ward}-${lat}-${lng}-${idx}`;
 
+                  // Get color name based on ward, default to blue
+                  const colorName = WARD_COLOR_MAP[ward] || "blue";
+
+                  // Custom marker icon with ward color
+                  const customIcon = new L.Icon({
+                    iconRetinaUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${colorName}.png`,
+                    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorName}.png`,
+                    shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41],
+                  });
+
                   return (
                     <Marker
                       key={stableKey}
                       position={[lat, lng]}
+                      icon={customIcon}
                       eventHandlers={{
                         click: () => handleMarkerClick(row),
                       }}
@@ -1167,7 +1164,6 @@ function App() {
           <h2 className="text-2xl font-bold mt-4 text-center text-black">
             Key Findings from the GVP Survey
           </h2>
-          {/* Problems Card and Reasons Card */}
           <div className="flex flex-row gap-4 mt-4">
             <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200">
               <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
@@ -1212,7 +1208,6 @@ function App() {
               </ResponsiveContainer>
             </div>
           </div>
-          {/* Who Dispose and Setting Cards */}
           <div className="flex flex-row gap-4 mt-4">
             <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200">
               <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
@@ -1251,7 +1246,6 @@ function App() {
               </ResponsiveContainer>
             </div>
           </div>
-          {/* Solution Card */}
           <div className="flex flex-row gap-4 mt-4">
             <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200" style={{ width: '50%' }}>
               <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
