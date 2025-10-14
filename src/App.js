@@ -635,29 +635,23 @@ const calculateWhoDisposeData = (data) => {
 // Calculate Location Data with Categorization
 const locationMap = [
   {
-    category: "Households",
-    keywords: ["जवळ पास असलेले सोसायटी","Banglow wale log aju baju ke",
-      "House hol and other",
-
-    ],
+    category: "Residential Area",
+    keywords: ["residential", "colony", "house", "society"],
   },
   {
-    category: "Passing Crowd",
-    keywords: ["आजुबाजूला असलेले लोक आणि ऑटो मधून जाणारे लोक पण येते कचरा टाकतात",
-      "कचरा गाडीवरून जाणारे व्यक्ती पण टाकतात आणि सोबत जवळपास राहणारे व्यक्ती पण टाकतात",
-    "जवळ पास चे लोक आणि रस्त्यावरून जाणारे लोक","पर्यटक आणि बाजूचे स्टॉल वाले कचरे टाकतात",
-  "Tourist"],
+    category: "Nallah / Drain",
+    keywords: ["nallah", "drain"],
   },
   {
-    category: "Dont Know",
-    keywords: ["माहित नाही",],
+    category: "Market / Commercial Area",
+    keywords: ["market_place", "market", "bazaar", "shop"],
   },
   {
-    category: "Lahuji Savale Park Ambazari Lake",
-    keywords: ["लहुजी सावळे उद्यान अंबाझरी लेक",],
+    category: "Playground / Open Space",
+    keywords: ["playground", "ground", "sports", "field"],
   },
   {
-    category: "Vendors",
+    category: "School / Institution",
     keywords: ["school", "college", "institution"],
   },
   {
