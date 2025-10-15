@@ -601,7 +601,7 @@ const categoryMap = [
     ],
   },
   {
-    category: "Dumping-by Waste",
+    category: "Drive-by Dumping",
     keywords: [
       "गाडीवरून येणाऱ्या लोक कचरा फेकून जातात",
       "जाण्या येणाऱ्या गाड्या वरून लोक फेकतात",
