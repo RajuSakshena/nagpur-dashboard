@@ -440,7 +440,7 @@ const WARD_COLOR_MAP = {
   "12": "red",
   "13": "green",
   "14": "blue",
-  "15": "orange", // Added orange for Ward 15
+  "15": "orange",
 };
 
 // Colors for bar charts
@@ -518,118 +518,153 @@ const calculateReasonsData = (data) => {
     .sort((a, b) => b.value - a.value);
 };
 
-// Calculate Who Dispose Data with Categorization
+// Category Map for Who Dispose
 const categoryMap = [
   {
-    category: "Nearby Households",
+    category: "Households",
     keywords: [
-      "nearby household",
-      "house hol",
-      "households",
-      "colony people",
-      "banglow wale log",
-      "जवळ पास",
-      "सोसायटी",
-    ],
-  },
-  {
-    category: "Vendors / Small Stalls",
-    keywords: [
-      "vendor",
-      "stall",
-      "shop",
-      "chai wale",
-      "market wale",
-      "street vendor",
-    ],
-  },
-  {
-    category: "People from Outside",
-    keywords: [
-      "outside",
-      "बाहेरून",
-      "पर्यटक",
-      "outsider",
-      "visitor",
-    ],
-  },
-  {
-    category: "Passing Crowd / Vehicle People",
-    keywords: [
-      "गाडी",
-      "जाण्या येणाऱ्या",
-      "ऑटो",
-      "vehicle",
-      "passing",
-    ],
-  },
-  {
-    category: "Households and Vendors Mixed",
-    keywords: [
-      "households , people from outside , street vendors",
-      "vendor and households",
-      "people and households",
-      "mixed",
-    ],
-  },
-  {
-    category: "Construction Waste",
-    keywords: ["construction", "repair", "काम", "बांधकाम"],
-  },
-  {
-    category: "Showrooms / Commercial Establishments",
-    keywords: ["showroom", "commercial"],
-  },
-  {
-    category: "Public Parks / Institutions",
-    keywords: ["उद्यान", "park", "public area", "lake", "ambazari"],
-  },
-  {
-    category: "Citizens / General Public",
-    keywords: ["citizens", "people", "public"],
-  },
-  {
-    category: "Unknown / Not Mentioned",
-    keywords: ["unknown", "माहित नाही", "n", "all", "dont know"],
-  },
-  {
-    category: "Nearby + Outside Combined",
-    keywords: [
-      "nearby households and people from outside",
+      "जवळ पास असलेले सोसायटी",
+      "Banglow wale log aju baju ke",
+      "House hol",
+      "other",
+      "Household",
+      "near by peoples",
+      "House holds",
+      "Nearby Households",
       "जवळ पास लोकांनी टाकतात आणि बाहेरून येणारे पण",
+      "Household",
+      "Householdss",
+      "Nearby household",
+      "colony people",
+      "Near by houshold",
+      "Nearby Households",
+      "Citizens",
+      "Residental peoples",
     ],
   },
   {
-    category: "Market / Vendor Community",
-    keywords: ["market", "vendors", "stall"],
+    category: "Passing Crowd",
+    keywords: [
+      "आजुबाजूला असलेले लोक आणि ऑटो मधून जाणारे लोक पण येते कचरा टाकतात",
+      "कचरा गाडीवरून जाणारे व्यक्ती पण टाकतात आणि सोबत जवळपास राहणारे व्यक्ती पण टाकतात",
+      "जवळ पास चे लोक आणि रस्त्यावरून जाणारे लोक",
+      "पर्यटक आणि बाजूचे स्टॉल वाले कचरे टाकतात",
+      "Tourist",
+      "जवळ पास चे लोक आणि रस्त्यावरून जाणाऱ्या लोक",
+    ],
+  },
+  {
+    category: "Dont Know",
+    keywords: ["माहित नाही"],
+  },
+  {
+    category: "Lahuji Savale Park Ambazari Lake",
+    keywords: ["लहुजी सावळे उद्यान अंबाझरी लेक"],
+  },
+  {
+    category: "Vendors",
+    keywords: [
+      "small stalls",
+      "Market wale log kachra dalte hai",
+      "Vendor",
+      "Street Vendorss ",
+      "Vendors and Households",
+      "Vendorss",
+      "Street Vendors",
+      "Chai wale",
+      "People and households & street vendors",
+      "vendors like fish and vegetables sellers",
+      " Small Stalls",
+      " shop keeper",
+      "Street Vendors",
+      " Street vendor",
+      "Vendorss",
+      " street vendors",
+      "Small stall",
+      "Shops",
+    ],
+  },
+  {
+    category: "Showroom",
+    keywords: ["Showroom"],
+  },
+  {
+    category: "Peoples From Outside",
+    keywords: [
+      "people from outside",
+      "People From Outside",
+      "outside people",
+      "Outside people",
+      "people from Outside",
+      "People from Outside",
+      "People from outside",
+    ],
+  },
+  {
+    category: "Dumping-by Waste",
+    keywords: [
+      "गाडीवरून येणाऱ्या लोक कचरा फेकून जातात",
+      "जाण्या येणाऱ्या गाड्या वरून लोक फेकतात",
+      "बाहेरून येणाऱ्या लोक कचरा टाकुण जाते",
+    ],
+  },
+  {
+    category: "Unknown",
+    keywords: ["N", "Unknownearby HouseHolds"],
+  },
+  {
+    category: "Constructions",
+    keywords: ["Ajubajuka construction ka kachra", "construction ka kachra"],
   },
 ];
 
 function categorize(text) {
+  if (!text || typeof text !== "string" || text.trim() === "" || text === "N/A") {
+    return null;
+  }
   const lowerText = text.toLowerCase().trim();
   for (const { category, keywords } of categoryMap) {
-    if (keywords.some((k) => lowerText.includes(k.toLowerCase()))) {
+    if (keywords.some((k) => lowerText.includes(k.toLowerCase().trim()))) {
       return category;
     }
   }
-  return "Unknown / Not Mentioned";
+  return "Unknown"; // Default to "Unknown" if no match is found
 }
 
+// Calculate Who Dispose Data with Categorization
 const calculateWhoDisposeData = (data) => {
-  const disposeCount = {};
+  const disposeCount = categoryMap.reduce((acc, { category }) => {
+    acc[category] = 0;
+    return acc;
+  }, {});
+
   data.forEach((row) => {
-    const disposeValue = row["Who Dispose"] || "";
-    const category = categorize(disposeValue);
-    disposeCount[category] = (disposeCount[category] || 0) + 1;
+    const columns = ["Who Dispose1", "Who Dispose2", "Who Dispose3"];
+    columns.forEach((col) => {
+      const disposeValue = row[col];
+      if (disposeValue && disposeValue.trim() !== "" && disposeValue !== "N/A") {
+        const category = categorize(disposeValue);
+        // Increment count even for "Unknown" category
+        if (category) {
+          disposeCount[category] = (disposeCount[category] || 0) + 1;
+        } else {
+          disposeCount["Unknown"] = (disposeCount["Unknown"] || 0) + 1;
+        }
+      }
+    });
   });
-  const totalCount = Object.values(disposeCount).reduce((sum, count) => sum + count, 0);
-  return Object.entries(disposeCount)
-    .map(([name, count]) => ({
-      name,
-      value: totalCount > 0 ? (count / totalCount) * 100 : 0,
+
+  const allData = Object.entries(disposeCount).map(([name, count]) => ({ name, count }));
+  const totalCount = allData.reduce((sum, item) => sum + item.count, 0);
+  if (totalCount === 0) {
+    return categoryMap.map(({ category }) => ({ name: category, value: 0 }));
+  }
+  return allData
+    .map((item) => ({
+      name: item.name,
+      value: (item.count / totalCount) * 100,
     }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5);
+    .sort((a, b) => b.value - a.value);
 };
 
 // Calculate Location Data with Categorization
@@ -712,63 +747,75 @@ const calculateSettingData = (data) => {
 };
 
 // Solution Categories
-export const solutionCategories = [
+const solutionCategories = [
   {
     category: "Bins and Facilites",
     keywords: [
-      "Dust bin at Roadside","Should Punishment Fee","More Bins", "Bins","More bins",
-      "More Bins Awareness Among People","Dustbins","Add a board ","Say to Use Of Dustbin",
-      "Add Dustbin"," Bins Too", " Dustbins and Strictly Fine", "Bins and Facilities and strict fines",
+      "Dust bin at Roadside",
+      "Should Punishment Fee",
+      "More Bins",
+      "Bins",
+      "More bins",
+      "More Bins Awareness Among People",
+      "Dustbins",
+      "Add a board ",
+      "Say to Use Of Dustbin",
+      "Add Dustbin",
+      " Bins Too",
+      " Dustbins and Strictly Fine",
+      "Bins and Facilities and strict fines",
       "Increasing of Dustbin",
     ],
   },
   {
     category: "Technology-Enabled Monitoring",
     keywords: [
-      "Fine and Surveillance Camera at that Place", "Surveillance Camera at that Place",
-      "install camera on street.", "Should Camera Surveillance", 
+      "Fine and Surveillance Camera at that Place",
+      "Surveillance Camera at that Place",
+      "install camera on street.",
+      "Should Camera Surveillance",
     ],
   },
   {
     category: "Strict Enforcement Measures ",
     keywords: [
-      "Strict Fines", "strictly fine for people",
-      "Strictly Fine","strict fines", "and strictly fine for people"
+      "Strict Fines",
+      "strictly fine for people",
+      "Strictly Fine",
+      "strict fines",
+      "and strictly fine for people",
     ],
-  },  
+  },
   {
     category: "Public Awareness & Education ",
     keywords: [
-      "Awareness Program", "Awareness Among People", "More Bins Awareness Among People",
-     ]
+      "Awareness Program",
+      "Awareness Among People",
+      "More Bins Awareness Among People",
+    ],
   },
   {
     category: "Sanitization Vehicle Roster",
-    keywords: [
-      "Should Regular Visit of Cleaner Vans", 
-     ]
+    keywords: ["Should Regular Visit of Cleaner Vans"],
   },
   {
     category: "Regulatory & Administrative Support",
-    keywords: [
-      "the NMC vehicle should collect this garbage from here .",
-     ]
+    keywords: ["the NMC vehicle should collect this garbage from here ."],
   },
   {
     category: "Efficient Waste Collection System",
     keywords: [
-      "Proper schedule for collection vehicle","The Place Need to be get cleaned from the road side on daily basis.",
-     ]
+      "Proper schedule for collection vehicle",
+      "The Place Need to be get cleaned from the road side on daily basis.",
+    ],
   },
   {
     category: "Neutral Feedback",
-    keywords: [
-      "Nothing",
-     ]
+    keywords: ["Nothing"],
   },
 ];
 
-export function categorizeSolution(text) {
+function categorizeSolution(text) {
   const lowerText = (text || "").toLowerCase().trim();
   for (const { category, keywords } of solutionCategories) {
     if (keywords.some((k) => lowerText.includes(k.toLowerCase()))) {
@@ -789,7 +836,7 @@ const calculateSolutionData = (data) => {
     const columns = [
       "Solution Suggested by Interviewee1",
       "Solution Suggested by Interviewee2",
-      "Solution Suggested by Interviewee3"
+      "Solution Suggested by Interviewee3",
     ];
     columns.forEach((col) => {
       const solutionValue = row[col];
@@ -807,7 +854,7 @@ const calculateSolutionData = (data) => {
   if (totalCount === 0) {
     return solutionCategories.map(({ category }) => ({
       name: category,
-      value: 100 / 8,
+      value: 100 / solutionCategories.length,
     }));
   }
   return allData.map((item) => ({
@@ -1185,22 +1232,16 @@ function App() {
             </div>
             <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200">
               <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
-                Reasons for Waste Accumulation
+                Top Settings Where GVPs Are Found
               </h2>
               <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={reasonsData} layout="vertical">
+                <BarChart data={settingData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    width={200}
-                    tick={{ fontSize: 14, angle: 0, fill: "black" }}
-                    interval={0}
-                  />
+                  <YAxis dataKey="name" type="category" width={200} tick={{ fontSize: 14, angle: 0, fill: "black" }} interval={0} />
                   <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
                   <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
-                    {reasonsData.map((entry, index) => (
+                    {settingData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={BAR_COLORS[index % BAR_COLORS.length]} />
                     ))}
                   </Bar>
@@ -1213,11 +1254,11 @@ function App() {
               <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
                 Who is Disposing the most Waste (as per Citizens)
               </h2>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={whoDisposeData} layout="vertical">
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={whoDisposeData} layout="vertical" margin={{ top: 20, right: 100, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                  <YAxis dataKey="name" type="category" width={200} tick={{ fontSize: 14, angle: 0, fill: "black" }} interval={0} />
+                  <YAxis dataKey="name" type="category" width={250} tick={{ fontSize: 14, angle: 0, fill: "black" }} interval={0} />
                   <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
                   <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
                     {whoDisposeData.map((entry, index) => (
@@ -1229,16 +1270,22 @@ function App() {
             </div>
             <div className="w-full bg-white p-4 rounded-lg shadow-lg border border-gray-200">
               <h2 className="text-lg font-semibold text-gray-700 text-center mb-4">
-                Top Settings Where GVPs Are Found
+                Reasons for Waste Accumulation
               </h2>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={settingData} layout="vertical">
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={reasonsData} layout="vertical" margin={{ top: 20, right: 100, left: 0, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                  <YAxis dataKey="name" type="category" width={200} tick={{ fontSize: 14, angle: 0, fill: "black" }} interval={0} />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={250}
+                    tick={{ fontSize: 14, angle: 0, fill: "black" }}
+                    interval={0}
+                  />
                   <Tooltip formatter={(value) => `${value.toFixed(1)}% - Detailed info here`} />
                   <Bar dataKey="value" barSize={20} label={renderCustomBarLabel}>
-                    {settingData.map((entry, index) => (
+                    {reasonsData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={BAR_COLORS[index % BAR_COLORS.length]} />
                     ))}
                   </Bar>
