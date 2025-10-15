@@ -612,10 +612,7 @@ const categoryMap = [
     category: "Unknown",
     keywords: ["N", "Unknownearby HouseHolds"],
   },
-  {
-    category: "Constructions",
-    keywords: ["Ajubajuka construction ka kachra", "construction ka kachra"],
-  },
+
 ];
 
 function categorize(text) {
